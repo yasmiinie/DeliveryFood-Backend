@@ -1,22 +1,29 @@
 const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
+const connectDB = require('./config/db');
+const authRoutes = require('./routes/auth');
 
 const app = express();
+
+// Middlewares
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
-
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+connectDB();
+
+// Routes
+app.use('/api/auth', authRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
-  res.json({ message: 'API is running' });
+    res.json({ message: 'API is running' });
 });
 
+
+// Your existing POST routes remain the 
+
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
