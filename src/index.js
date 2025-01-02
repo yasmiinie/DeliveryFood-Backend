@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
+const restaurantRoutes = require('./routes/restaurant'); // Add this line
 
 const app = express();
 
@@ -14,14 +15,12 @@ connectDB();
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/restaurants', restaurantRoutes); // Add this line
 
 // Basic route
 app.get('/', (req, res) => {
     res.json({ message: 'API is running' });
 });
-
-
-// Your existing POST routes remain the 
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
