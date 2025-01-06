@@ -13,7 +13,6 @@ router.get('/', async (req, res) => {
 });
 
 // Homepage route for nearby restaurants with the best ratings
-// Homepage route for nearby restaurants with the best ratings
 router.get('/nearby-top', async (req, res) => {
     try {
         const { latitude, longitude, limit = 10 } = req.query;
@@ -42,7 +41,6 @@ router.get('/nearby-top', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
-
 
 // Search route with filters
 router.get('/search', async (req, res) => {
@@ -153,6 +151,7 @@ router.post('/', async (req, res) => {
                 average: req.body.rating?.average || 0,
                 count: req.body.rating?.count || 0
             },
+            deliveryFee: req.body.deliveryFee || 0, // Ajout du champ frais de livraison
             isActive: req.body.isActive !== undefined ? req.body.isActive : true
         });
 
@@ -197,6 +196,5 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
-
 
 module.exports = router;

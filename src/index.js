@@ -3,7 +3,10 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
-const restaurantRoutes = require('./routes/restaurant'); // Add this line
+const restaurantRoutes = require('./routes/restaurant'); // Routes pour les restaurants
+const menuItemRoutes = require('./routes/menuItem'); // Routes pour les items de menu
+const panierRoutes = require('./routes/panier'); // Routes pour le panier
+const orderRoutes = require('./routes/order'); // Importation des routes pour les commandes
 
 const app = express();
 
@@ -15,7 +18,10 @@ connectDB();
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/restaurants', restaurantRoutes); // Add this line
+app.use('/api/restaurants', restaurantRoutes); // Routes pour les restaurants
+app.use('/api/menu-items', menuItemRoutes); // Routes pour les items de menu
+app.use('/api/panier', panierRoutes); // Routes pour le panier
+app.use('/api/orders', orderRoutes); // Ajout des routes pour les commandes
 
 // Basic route
 app.get('/', (req, res) => {

@@ -72,6 +72,11 @@ const restaurantSchema = new mongoose.Schema(
         isActive: {
             type: Boolean,
             default: true
+        },
+        deliveryFee: {  
+            type: Number,
+            required: true,
+            default: 0  
         }
     },
     { 
