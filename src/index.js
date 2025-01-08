@@ -7,7 +7,7 @@ const restaurantRoutes = require('./routes/restaurant'); // Routes pour les rest
 const menuItemRoutes = require('./routes/menuItem'); // Routes pour les items de menu
 const panierRoutes = require('./routes/panier'); // Routes pour le panier
 const orderRoutes = require('./routes/order'); // Importation des routes pour les commandes
-
+const notificationRoutes = require('./routes/notification');
 const app = express();
 
 // Middlewares
@@ -17,6 +17,8 @@ app.use(express.json());
 connectDB();
 
 // Routes
+
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/restaurants', restaurantRoutes); // Routes pour les restaurants
 app.use('/api/menu-items', menuItemRoutes); // Routes pour les items de menu
@@ -30,5 +32,5 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port : https://deliveryfood-backend-yyxy.onrender.com/api/`);
+    console.log(`Server is running on port : http://127.0.0.1:${PORT}`);
 });
