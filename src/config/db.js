@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
     try {
         await mongoose.connect(process.env.MONGODB_URI, {
-            dbName: 'Restaurant_App' // Specify database name
+            dbName: 'Food_Delivery_App' // Specify database name
         });
         console.log('Connected to MongoDB - Restaurant_App');
 
