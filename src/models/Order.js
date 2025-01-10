@@ -11,40 +11,47 @@ const orderSchema = new mongoose.Schema({
         ref: 'Panier',
         required: true,
     },
+    itemQuantities: [
+        {
+            itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Item', required: true },
+            quantity: { type: Number, required: true, min: 1 },
+        },
+    ],
     totalAmount: {
         type: Number,
         required: true,
+        min: 0,
     },
     deliveryAddress: {
-        street: String,
-        city: String,
-        postalCode: String,
+        street: { type: String, required: true },
+        city: { type: String, required: true },
+        postalCode: { type: String, required: true },
         coordinates: {
-            latitude: Number,
-            longitude: Number,
+            latitude: { type: Number, required: false },
+            longitude: { type: Number, required: false },
         },
     },
     status: {
         type: String,
         enum: [
-            'pending',             // Commande créée mais non confirmée par le restaurant
-            'confirmed',           // Acceptée par le restaurant
-            'in-preparation',      // Le restaurant prépare la commande
-            'out-for-delivery',    // Le livreur a pris en charge la commande
-            'delivered',           // La commande est arrivée
-            'cancelled',           // La commande a été annulée
+            'pending',
+            'confirmed',
+            'in-preparation',
+            'out-for-delivery',
+            'delivered',
+            'cancelled',
         ],
-        default: 'pending',  // Valeur par défaut
+        default: 'pending',
     },
     placedAt: {
         type: Date,
         default: Date.now,
     },
-    userNotes: {  // Notes personnalisées de l'utilisateur
+    userNotes: {
         type: String,
-        trim: true,  // Enlever les espaces inutiles au début et à la fin
+        trim: true,
     },
-    deliveryNotes: {  // Notes de livraison pour aider le livreur
+    deliveryNotes: {
         type: String,
         trim: true,
     },

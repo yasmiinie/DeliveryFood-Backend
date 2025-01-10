@@ -25,28 +25,33 @@ router.post('/add-to-cart', async (req, res) => {
     try {
         const { userId, menuItemId, quantity = 1 } = req.body;
 
+
         // Vérifier l'existence de l'utilisateur et de l'article
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
+
         const menuItem = await MenuItem.findById(menuItemId);
         if (!menuItem) {
             return res.status(404).json({ message: "Menu item not found" });
         }
+
 
         // Récupérer ou créer le panier
         let cart = await Panier.findOne({ userId });
         if (!cart) {
             cart = new Panier({
                 userId,
+                items: [], // Nous n'utiliserons plus 'items'
                 total: 0,
-                restaurantIds: [],
-                itemQuantities: [],
+                restaurantId: menuItem.restaurant,
+                itemQuantities: [], // Nous continuons à utiliser 'itemQuantities'
                 status: 'open',
             });
         }
+
 
         // Vérifier si l'article existe déjà
         const existingItemIndex = cart.itemQuantities.findIndex(item => item.menuItemId.toString() === menuItemId);
@@ -56,28 +61,88 @@ router.post('/add-to-cart', async (req, res) => {
             cart.itemQuantities.push({ menuItemId, quantity });
         }
 
-        // Peupler les détails des articles de menu
-        const populatedItems = await MenuItem.find({
-            _id: { $in: cart.itemQuantities.map(item => item.menuItemId) }
-        });
 
-        // Mettre à jour la liste des restaurants dans le panier
-        cart.restaurantIds = [...new Set(
-            populatedItems.map(item => item.restaurant.toString())
-        )];
-
-        // Recalculer le total du panier
+        // Recalculer le total sans avoir besoin de 'items'
+        const allMenuItems = await MenuItem.find({ _id: { $in: cart.itemQuantities.map(item => item.menuItemId) } });
         cart.total = cart.itemQuantities.reduce((total, item) => {
-            const menuItem = populatedItems.find(menu => menu._id.toString() === item.menuItemId.toString());
+            const menuItem = allMenuItems.find(menu => menu._id.toString() === item.menuItemId.toString());
             return menuItem ? total + menuItem.price * item.quantity : total;
         }, 0);
 
-        // Calculer les frais de livraison
-        cart.deliveryFee = await calculateDeliveryFee(cart.restaurantIds);
 
         // Sauvegarder le panier mis à jour
         await cart.save();
         res.json({ message: "Item added to cart", cart });
+
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur lors de l'ajout de l'article au panier", error: error.message });
+    }
+});
+
+
+
+
+// Vider le panier et ajouter un nouvel article
+router.post('/clear-and-add-to-cart', async (req, res) => {
+    try {
+        const { userId, menuItemId, quantity = 1 } = req.body; // Quantité par défaut 1
+
+
+        // Fetch the user
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+
+        // Fetch the menu item
+        const menuItem = await MenuItem.findById(menuItemId);
+        if (!menuItem) {
+            return res.status(404).json({ message: "Menu item not found" });
+        }
+
+
+        // Fetch the user's cart and clear it
+        let cart = await Panier.findOne({ userId: userId });
+
+
+        if (!cart) {
+            // Create a new cart if none exists
+            cart = new Panier({
+                userId: userId,
+                items: [], // Nous n'utiliserons plus 'items'
+                total: 0,
+                restaurantId: menuItem.restaurant,  // Set restaurant for first item
+                itemQuantities: [],  // Initial itemQuantities
+                status: 'open', // Default status
+            });
+        } else {
+            // Clear existing cart
+            cart.itemQuantities = [];
+            cart.total = 0;
+        }
+
+
+        // Add the new item with the quantity
+        cart.itemQuantities.push({ menuItemId: menuItemId, quantity: quantity });
+
+
+        // Recalculate the total price using only itemQuantities
+        const allMenuItems = await MenuItem.find({ _id: { $in: cart.itemQuantities.map(item => item.menuItemId) } });
+        cart.total = cart.itemQuantities.reduce((total, item) => {
+            const menuItem = allMenuItems.find(itemInCart => itemInCart._id.toString() === item.menuItemId.toString());
+            return total + (menuItem.price * item.quantity);
+        }, 0);
+
+
+        // Save the updated cart
+        await cart.save();
+
+
+        res.json({ message: "Panier vidé et nouvel article ajouté", cart });
+
 
     } catch (error) {
         console.error(error);
