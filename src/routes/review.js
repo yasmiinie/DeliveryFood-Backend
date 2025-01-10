@@ -4,7 +4,9 @@ const router = express.Router();
 const Review = require('../models/Review');
 const Restaurant = require('../models/Restaurant');
 const Order = require('../models/Order');
-const Panier = require('../models/Panier'); // Assurez-vous que Panier est correctement importé
+const Panier = require('../models/Panier'); // Assurez-vous que Panier est correctement importés
+const User = require('../models/User'); // Importation du modèle User
+
 
 // Ajouter une critique
 router.post('/', async (req, res) => {
@@ -42,14 +44,13 @@ router.post('/', async (req, res) => {
         }
         console.log('Panier trouvé :', panier);
 
-        // Vérifier que le panier contient au moins un restaurant
-        if (!panier.restaurantIds || panier.restaurantIds.length === 0) {
+        // Vérifier que le panier contient un restaurant valide
+        if (!panier.restaurantId) {
             console.log('Aucun restaurant associé au panier :', panier);
             return res.status(404).json({ message: 'No restaurant associated with this order' });
         }
 
-        // Sélectionner le premier restaurant (ou une autre logique si nécessaire)
-        const restaurantId = panier.restaurantIds[0];
+        const restaurantId = panier.restaurantId; // Utiliser directement restaurantId
         console.log('Restaurant associé trouvé :', restaurantId);
 
         // Vérifier que le restaurant existe
@@ -82,6 +83,84 @@ router.post('/', async (req, res) => {
                 averageRating: restaurant.rating.average,
                 totalReviews: restaurant.rating.count,
             },
+        });
+    } catch (error) {
+        console.error('Erreur serveur :', error.message);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// Vérifier si l'utilisateur a déjà laissé une critique pour cette commande
+router.get('/check/:userId/:orderId', async (req, res) => {
+    const { userId, orderId } = req.params;
+
+    try {
+        const existingReview = await Review.findOne({ userId, orderId });
+        if (existingReview) {
+            return res.status(400).json({ message: 'Review already exists for this order' });
+        }
+
+        res.status(200).json({ message: 'No review found for this order' });
+    } catch (error) {
+        console.error('Erreur serveur :', error.message);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// Supprimer une critique
+router.delete('/:reviewId', async (req, res) => {
+    const { reviewId } = req.params;
+
+    try {
+        const review = await Review.findByIdAndDelete(reviewId);
+        if (!review) {
+            return res.status(404).json({ message: 'Review not found' });
+        }
+
+        // Mettre à jour le score du restaurant après suppression
+        const restaurant = await Restaurant.findById(review.restaurantId);
+        if (restaurant) {
+            restaurant.rating.count -= 1;
+            restaurant.rating.average = (restaurant.rating.average * (restaurant.rating.count + 1) - review.rating) / restaurant.rating.count;
+            await restaurant.save();
+        }
+
+        res.status(200).json({ message: 'Review deleted' });
+    } catch (error) {
+        console.error('Erreur lors de la suppression de la critique :', error.message);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// Récupérer les critiques d'un restaurant avec les infos de l'utilisateur
+router.get('/restaurant/:restaurantId/reviews', async (req, res) => {
+    const { restaurantId } = req.params;
+
+    try {
+        // Vérifier que le restaurant existe
+        const restaurant = await Restaurant.findById(restaurantId);
+        if (!restaurant) {
+            return res.status(404).json({ message: 'Restaurant not found' });
+        }
+
+        // Récupérer toutes les critiques du restaurant
+        const reviews = await Review.find({ restaurantId: restaurantId })
+            .populate('userId', 'name email profilePicture') // Récupérer les informations de l'utilisateur
+            .exec();
+
+        if (reviews.length === 0) {
+            return res.status(404).json({ message: 'No reviews found for this restaurant' });
+        }
+
+        // Renvoi des critiques avec les informations de l'utilisateur
+        res.status(200).json({
+            message: 'Reviews retrieved successfully',
+            reviews: reviews.map(review => ({
+                rating: review.rating,
+                comment: review.comment,
+                user: review.userId, // Contient les informations de l'utilisateur
+                createdAt: review.createdAt,
+            })),
         });
     } catch (error) {
         console.error('Erreur serveur :', error.message);
