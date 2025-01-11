@@ -93,6 +93,55 @@ router.post('/userinfo', async (req, res) => {
     }
 });
 
+router.put('/updateUserInfo', async (req, res) => {
+    try {
+        const { id, name, email, profilePicture, addresses, bio, phoneNumber } = req.body;
+
+        // Check if user exists
+        const user = await User.findOne({ _id: id });
+        if (!user) {
+            return res.status(400).json({ message: 'User not found' });
+        }
+        if (!user.bio) user.bio = "null";
+        if (!user.phoneNumber) user.phoneNumber = "null";
+        // Update only the fields that are provided in the request
+        const updateFields = {};
+        if (name) updateFields.name = name;
+        if (email) updateFields.email = email;
+        if (profilePicture) updateFields.profilePicture = profilePicture;
+        if (addresses) updateFields.addresses = addresses; // Ensure addresses format is correct
+        if (bio) updateFields.bio = bio;
+        if (phoneNumber) updateFields.phoneNumber = phoneNumber;
+
+        // Update the user
+        const updatedUser = await User.findByIdAndUpdate(
+            id, // Match by id
+            { ...updateFields,
+             bio: updateFields.bio || user.bio, 
+             phoneNumber: updateFields.phoneNumber || user.phoneNumber, 
+             updatedAt: new Date() }, // Update provided fields and timestamp
+            { new: true } // Return the updated document
+        );
+
+        res.status(200).json({
+            message: 'User info updated successfully',
+            user: {
+                id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                profilePicture: updatedUser.profilePicture,
+                addresses: updatedUser.addresses,
+                bio: updatedUser.bio || "null",  
+                phoneNumber: updatedUser.phoneNumber || "null",  
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error updating user info' });
+    }
+});
+
+
 // Add Profile Picture based on id
 router.put('/updateProfilePicture', async (req, res) => {
     const { id, profilePicture } = req.body;
