@@ -28,6 +28,9 @@ const userSchema = new mongoose.Schema(
         },
         addresses: [
             {
+                title:{
+                    type: String
+                },
                 street: {
                     type: String
                 },
