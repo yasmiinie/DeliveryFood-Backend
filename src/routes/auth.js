@@ -68,15 +68,39 @@ router.post('/login', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+router.post('/userinfo', async (req, res) => {
+    try {
+        // Check if user exists
+        const user = await User.findOne({ _id: req.body.id });
+        if (!user) {
+            return res.status(400).json({ message: 'user not found' });
+        }
 
-// Add Profile Picture based on Email
+        res.status(200).json({ 
+            message: 'Fetching successfully',
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                profilePicture: user.profilePicture,
+                addresses: user.addresses,
+                bio: user.bio || "null",  
+                phoneNumber: user.phoneNumber || "null",  
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Add Profile Picture based on id
 router.put('/updateProfilePicture', async (req, res) => {
-    const { email, profilePicture } = req.body;
+    const { id, profilePicture } = req.body;
 
     try {
-        // Find user by email and update profile picture
+        // Find user by id and update profile picture
         const updatedUser = await User.findOneAndUpdate(
-            { email }, // Match by email
+            {  _id: id }, // Match by id
             { profilePicture, updatedAt: Date.now() }, // Update profile picture and timestamp
             { new: true }
         );
