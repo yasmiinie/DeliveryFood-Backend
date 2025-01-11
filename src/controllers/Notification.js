@@ -12,9 +12,9 @@ const getNotifications = async (req, res) => {
 
 // Add a new notification
 const createNotification = async (req, res) => {
-    const { text, orderId } = req.body;
+    const { text, orderId , userId } = req.body;
     try {
-        const newNotification = new Notification({ text, orderId });
+        const newNotification = new Notification({ text, orderId,userId });
         await newNotification.save();
         res.status(201).json(newNotification);
     } catch (err) {
