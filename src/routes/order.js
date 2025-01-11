@@ -88,7 +88,10 @@ router.get('/:userId', async (req, res) => {
     }
 
     try {
-        const orders = await Order.find({ userId: req.params.userId });  
+        // Rechercher les commandes pour un utilisateur spécifique
+        const orders = await Order.find({ userId });
+
+        // Vérifier si des commandes ont été trouvées
         if (orders.length === 0) {
             return res.status(404).json({ message: "Aucune commande trouvée." });
         }
@@ -130,36 +133,6 @@ router.put('/:orderId/status', async (req, res) => {
     }
 });
 
-// Mettre à jour le statut d'une commande
-router.put('/:orderId/status', async (req, res) => {
-    const { status } = req.body;
-    const validStatuses = ['pending', 'confirmed', 'in-preparation', 'out-for-delivery', 'delivered', 'cancelled'];
-
-    if (!mongoose.Types.ObjectId.isValid(req.params.orderId)) {
-        return res.status(400).json({ message: "ID de commande invalide." });
-    }
-
-    if (!validStatuses.includes(status)) {
-        return res.status(400).json({ message: "Statut invalide." });
-    }
-
-    try {
-        const order = await Order.findById(req.params.orderId);
-        if (!order) {
-            return res.status(404).json({ message: "Commande non trouvée." });
-        }
-
-        order.status = status;
-        await order.save();
-
-        res.status(200).json(order);
-    } catch (err) {
-        console.error('Erreur lors de la mise à jour du statut:', err);
-        res.status(500).json({ message: "Erreur lors de la mise à jour du statut." });
-    }
-});
-
-
 // Ajouter des notes à la commande (pour les préférences ou notes de livraison)
 router.put('/:orderId/notes', async (req, res) => {
     const { userNotes, deliveryNotes } = req.body;
@@ -184,6 +157,37 @@ router.put('/:orderId/notes', async (req, res) => {
     } catch (err) {
         console.error('Erreur lors de l\'ajout des notes:', err);
         res.status(500).json({ message: "Erreur lors de l'ajout des notes." });
+    }
+});
+
+// Récupérer la liste des items dans un panier
+router.get('/:panierId/items', async (req, res) => {
+    const { panierId } = req.params;
+
+    // Vérification que l'ID du panier est valide
+    if (!mongoose.Types.ObjectId.isValid(panierId)) {
+        return res.status(400).json({ message: "ID de panier invalide." });
+    }
+
+    try {
+        // Rechercher le panier par son ID
+        const panier = await Panier.findById(panierId).populate('itemQuantities.menuItemId');
+
+        if (!panier) {
+            return res.status(404).json({ message: "Panier non trouvé." });
+        }
+
+        // Récupérer les items et leurs quantités
+        const items = panier.itemQuantities.map(item => ({
+            menuItemId: item.menuItemId._id,
+            menuItemName: item.menuItemId.name || 'Nom non défini',
+            quantity: item.quantity,
+        }));
+
+        res.status(200).json(items);
+    } catch (err) {
+        console.error('Erreur lors de la récupération des items du panier:', err);
+        res.status(500).json({ message: "Erreur lors de la récupération des items du panier." });
     }
 });
 
