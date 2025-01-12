@@ -144,23 +144,30 @@ router.get('/restaurant/:restaurantId/reviews', async (req, res) => {
         }
 
         // Récupérer toutes les critiques du restaurant
-        const reviews = await Review.find({ restaurantId: restaurantId })
-            .populate('userId', 'name email profilePicture') // Récupérer les informations de l'utilisateur
-            .exec();
+        const reviews = await Review.find({ restaurantId: restaurantId });
 
         if (reviews.length === 0) {
             return res.status(404).json({ message: 'No reviews found for this restaurant' });
         }
 
+        // Récupérer les informations des utilisateurs associés aux critiques
+        const reviewsWithUserDetails = await Promise.all(
+            reviews.map(async (review) => {
+                const user = await User.findById(review.userId);
+                return {
+                    rating: review.rating,
+                    comment: review.comment,
+                    user: review.userId,
+                    userName: user ? user.name : 'Unknown', // Inclure le nom de l'utilisateur
+                    createdAt: review.createdAt,
+                };
+            })
+        );
+
         // Renvoi des critiques avec les informations de l'utilisateur
         res.status(200).json({
             message: 'Reviews retrieved successfully',
-            reviews: reviews.map(review => ({
-                rating: review.rating,
-                comment: review.comment,
-                user: review.userId, // Contient les informations de l'utilisateur
-                createdAt: review.createdAt,
-            })),
+            reviews: reviewsWithUserDetails,
         });
     } catch (error) {
         console.error('Erreur serveur :', error.message);
