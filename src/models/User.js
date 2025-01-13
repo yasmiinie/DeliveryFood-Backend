@@ -14,7 +14,10 @@ const userSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            required: true
+            required: function() {
+                // 'password' is required only if googleId is not present
+                return !this.googleId;
+            }
         },
         phoneNumber: {
             type: String
@@ -28,7 +31,7 @@ const userSchema = new mongoose.Schema(
         },
         addresses: [
             {
-                title:{
+                title: {
                     type: String
                 },
                 street: {
@@ -42,7 +45,7 @@ const userSchema = new mongoose.Schema(
                 },
                 coordinates: {
                     latitude: {
-                        type: Number 
+                        type: Number
                     },
                     longitude: {
                         type: Number
