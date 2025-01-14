@@ -159,6 +159,7 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 router.get('/google/callback',
     passport.authenticate('google', { failureRedirect: '/login' }),
     (req, res) => {
+        const userId = req.user._id;
         res.redirect('myapp://auth/google/callback');    }
 );
 
