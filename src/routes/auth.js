@@ -159,8 +159,7 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 router.get('/google/callback',
     passport.authenticate('google', { failureRedirect: '/login' }),
     (req, res) => {
-        res.redirect('/home'); // Redirect after successful login
-    }
+        res.redirect('myapp://auth/google/callback');    }
 );
 
 // Logout
