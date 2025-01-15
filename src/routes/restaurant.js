@@ -197,4 +197,18 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+router.get('/restaurants/:restaurantId/reviews', async (req, res) => {
+    const { restaurantId } = req.params;
+
+    try {
+        // Find all reviews for the given restaurantId
+        const reviews = await Review.find({ restaurantId }).populate('userId', 'name'); // Populate user details if needed
+        res.status(200).json(reviews);
+    } catch (error) {
+        console.error('Error fetching reviews:', error.message);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+
 module.exports = router;

@@ -96,7 +96,7 @@ router.delete('/:reviewId', async (req, res) => {
 });
 
 // Récupérer les critiques d'un restaurant avec les infos de l'utilisateur
-router.get('/restaurant/:restaurantId/reviews', async (req, res) => {
+router.get('/:restaurantId/', async (req, res) => {
     const { restaurantId } = req.params;
 
     try {
