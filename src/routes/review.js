@@ -9,49 +9,13 @@ const User = require('../models/User'); // Importation du modèle User
 
 
 // Ajouter une critique
+
 router.post('/', async (req, res) => {
-    const { userId, orderId, rating, comment } = req.body;
+    const { userId, restaurantId, rating, comment } = req.body; // Replace orderId with restaurantId
 
     try {
         console.log('Début de la création de la critique');
-        console.log('Requête reçue avec les données :', { userId, orderId, rating, comment });
-
-        // Vérifier que la commande existe
-        const order = await Order.findById(orderId);
-        if (!order) {
-            console.log('Commande introuvable pour orderId :', orderId);
-            return res.status(404).json({ message: 'Order not found' });
-        }
-        console.log('Commande trouvée :', order);
-
-        // Vérifier que l'utilisateur correspond
-        if (order.userId.toString() !== userId) {
-            console.log('Utilisateur non autorisé à évaluer cette commande. UserId attendu :', order.userId);
-            return res.status(403).json({ message: 'Unauthorized to review this order' });
-        }
-
-        // Vérifier que l'ID du panier est valide
-        if (!mongoose.Types.ObjectId.isValid(order.panierId)) {
-            console.log('ID de panier invalide :', order.panierId);
-            return res.status(400).json({ message: 'Invalid panier ID' });
-        }
-
-        // Récupérer le panier lié à la commande
-        const panier = await Panier.findById(order.panierId);
-        if (!panier) {
-            console.log('Panier introuvable pour panierId :', order.panierId);
-            return res.status(404).json({ message: 'Panier not found for this order' });
-        }
-        console.log('Panier trouvé :', panier);
-
-        // Vérifier que le panier contient un restaurant valide
-        if (!panier.restaurantId) {
-            console.log('Aucun restaurant associé au panier :', panier);
-            return res.status(404).json({ message: 'No restaurant associated with this order' });
-        }
-
-        const restaurantId = panier.restaurantId; // Utiliser directement restaurantId
-        console.log('Restaurant associé trouvé :', restaurantId);
+        console.log('Requête reçue avec les données :', { userId, restaurantId, rating, comment });
 
         // Vérifier que le restaurant existe
         const restaurant = await Restaurant.findById(restaurantId);
@@ -62,7 +26,7 @@ router.post('/', async (req, res) => {
         console.log('Restaurant trouvé :', restaurant);
 
         // Ajouter la critique
-        const newReview = new Review({ userId, orderId, restaurantId, rating, comment });
+        const newReview = new Review({ userId, restaurantId, rating, comment }); // Remove orderId
         await newReview.save();
         console.log('Critique ajoutée :', newReview);
 
@@ -89,7 +53,6 @@ router.post('/', async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
-
 // Vérifier si l'utilisateur a déjà laissé une critique pour cette commande
 router.get('/check/:userId/:orderId', async (req, res) => {
     const { userId, orderId } = req.params;
